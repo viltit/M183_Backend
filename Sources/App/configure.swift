@@ -18,11 +18,14 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     services.register(middlewares)
 
     // Configure a SQLite database
+    // MySQL Database Docker container name: "m223"
+    // TODO: Do not connect as root!
+    // TODO: Set password as environment variable!
     let mySQLConfig = MySQLDatabaseConfig(
-            hostname: "172.17.0.1", 
+            hostname: "172.17.0.2", 
             port: 3306,
-            username: "root", 
-            password: "",
+            username: "root",
+            password: "viltit",
             database: "m223")
     let mysql = try MySQLDatabase(config: mySQLConfig)
 

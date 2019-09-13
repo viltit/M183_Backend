@@ -1,8 +1,8 @@
 import Foundation
 import FluentMySQL
+import Vapor
 
-
-final class User : Model, Migration {
+final class User : Model {
 
     // conform to Model. We could inherit from MySQL-Model to avoid this code, but I prefer to be
     // explicit here
@@ -23,3 +23,11 @@ final class User : Model, Migration {
         self.username = username
     }
 }
+
+// conform to migrations for automated table creation:
+extension User : Migration { }
+
+// conform to Content for encoding and decoding this Model from and to JSON
+extension User : Content { }
+
+// conform to Parameter to allow getting a User from
