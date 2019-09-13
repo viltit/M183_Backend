@@ -1,10 +1,11 @@
-import FluentSQLite
+import FluentMySQL
 import Vapor
 
 /// Called before your application initializes.
 public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
+
     // Register providers first
-    try services.register(FluentSQLiteProvider())
+    try services.register(FluentMySQLProvider())
 
     // Register routes to the router
     let router = EngineRouter.default()
@@ -12,21 +13,27 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     services.register(router, as: Router.self)
 
     // Register middleware
-    var middlewares = MiddlewareConfig() // Create _empty_ middleware config
-    // middlewares.use(FileMiddleware.self) // Serves files from `Public/` directory
-    middlewares.use(ErrorMiddleware.self) // Catches errors and converts to HTTP response
+    var middlewares = MiddlewareConfig()    // Create _empty_ middleware config
+    middlewares.use(ErrorMiddleware.self)   // Catches errors and converts to HTTP response
     services.register(middlewares)
 
     // Configure a SQLite database
-    let sqlite = try SQLiteDatabase(storage: .memory)
+    let mySQLConfig = MySQLDatabaseConfig(
+            hostname: "172.17.0.1", 
+            port: 3306,
+            username: "root", 
+            password: "",
+            database: "m223")
+    let mysql = try MySQLDatabase(config: mySQLConfig)
 
-    // Register the configured SQLite database to the database config.
+
+    // Register the configured database to the database config.
     var databases = DatabasesConfig()
-    databases.add(database: sqlite, as: .sqlite)
+    databases.add(database: mysql, as: .mysql)
     services.register(databases)
 
-    // Configure migrations
+    // configure migration. Note: Vapor will NOT alter the database when you change the Model.
     var migrations = MigrationConfig()
-    migrations.add(model: Todo.self, database: .sqlite)
+    migrations.add(model: User.self, database: .mysql)
     services.register(migrations)
 }

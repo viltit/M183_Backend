@@ -1,5 +1,8 @@
 Packages
 .build
+.circleci
+.idea/
+file:*
 xcuserdata
 *.xcodeproj
 DerivedData/
