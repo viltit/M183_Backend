@@ -30,4 +30,5 @@ extension User : Migration { }
 // conform to Content for encoding and decoding this Model from and to JSON
 extension User : Content { }
 
-// conform to Parameter to allow getting a User from
+// conform to Parameter to allow getting a User from POST-Parameters
+extension User : Parameter { }

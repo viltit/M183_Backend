@@ -10,6 +10,8 @@ struct UserController : RouteCollection {
         router.get("api/users", use: getAll)
         router.post("api/users/find", use: get)
         router.post("api/users/create", use: create)
+        router.put("api/users", User.parameter, use: update)
+        router.delete("api/users", use: delete)
     }
 
     // Decodable for post-request with user id
@@ -17,6 +19,7 @@ struct UserController : RouteCollection {
         let id: Int
     }
 
+    // CRUD-Operations
     func getAll(_ request: Request) throws -> Future<[User]> {
         return try request.transaction(on: .mysql) { connection in
             return User.query(on: connection).all()
@@ -50,7 +53,32 @@ struct UserController : RouteCollection {
         }
     }
 
+    func update(_ request: Request) throws -> Future<User> {
+        return try request.transaction(on: .mysql) { connection in
+            return try flatMap(
+                    to: User.self,
+                    request.parameters.next(User.self),   // get existing User from the id delivered as GET-Parameter
+                    request.content.decode(User.self)) {  // get updated User from request JSON
 
+                user, newUser in
+                user.firstName = newUser.firstName
+                user.lastName = newUser.lastName
+                user.email = newUser.email
+                user.username = newUser.username
+                return user.save(on: connection)
+            }
+        }
+    }
 
-
+    func delete(_ request: Request) throws -> Future<HTTPStatus> {
+        return try request.transaction(on: .mysql) { connection in
+            return try request
+                    .content
+                    .decode(User.self)                     // TODO: Only send users id
+                    .flatMap(to: HTTPStatus.self) { user in
+                        return try user.delete(on: connection)
+                                .transform(to: .noContent)
+                    }
+        }
+    }
 }
