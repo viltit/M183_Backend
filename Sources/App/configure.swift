@@ -37,6 +37,6 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
 
     // configure migration. Note: Vapor will NOT alter the database when you change the Model.
     var migrations = MigrationConfig()
-    migrations.add(model: User.self, database: .mysql)
+    migrations.add(model: Doctor.self, database: .mysql)
     services.register(migrations)
 }

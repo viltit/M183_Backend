@@ -10,7 +10,7 @@ struct UserController : RouteCollection {
         router.get("api/users", use: getAll)
         router.post("api/users/find", use: get)
         router.post("api/users/create", use: create)
-        router.put("api/users", User.parameter, use: update)
+        router.put("api/users", Doctor.parameter, use: update)
         router.delete("api/users", use: delete)
     }
 
@@ -20,19 +20,19 @@ struct UserController : RouteCollection {
     }
 
     // CRUD-Operations
-    func getAll(_ request: Request) throws -> Future<[User]> {
+    func getAll(_ request: Request) throws -> Future<[Doctor]> {
         return try request.transaction(on: .mysql) { connection in
-            return User.query(on: connection).all()
+            return Doctor.query(on: connection).all()
         }
     }
 
-    func get(_ request: Request) throws -> Future<User> {
+    func get(_ request: Request) throws -> Future<Doctor> {
          return try request.transaction(on: .mysql) { connection in
             return try request
                     .content
                     .decode(IDDecodable.self)
-                    .flatMap(to: User.self) { idDecodable in
-                        return try User.find(idDecodable.id, on: connection).map { user in
+                    .flatMap(to: Doctor.self) { idDecodable in
+                        return try Doctor.find(idDecodable.id, on: connection).map { user in
                             guard let user = user else {
                                 throw Abort(.noContent, reason: "No user with id \(idDecodable.id)")
                             }
@@ -42,23 +42,23 @@ struct UserController : RouteCollection {
         }
     }
 
-    func create(_ request: Request) throws -> Future<User> {
+    func create(_ request: Request) throws -> Future<Doctor> {
         return try request.transaction(on: .mysql) { connection in
             return try request
                     .content
-                    .decode(User.self)
-                    .flatMap(to: User.self) { user in
+                    .decode(Doctor.self)
+                    .flatMap(to: Doctor.self) { user in
                         return user.save(on: request)
                     }
         }
     }
 
-    func update(_ request: Request) throws -> Future<User> {
+    func update(_ request: Request) throws -> Future<Doctor> {
         return try request.transaction(on: .mysql) { connection in
             return try flatMap(
-                    to: User.self,
-                    request.parameters.next(User.self),   // get existing User from the id delivered as GET-Parameter
-                    request.content.decode(User.self)) {  // get updated User from request JSON
+                    to: Doctor.self,
+                    request.parameters.next(Doctor.self),   // get existing User from the id delivered as GET-Parameter
+                    request.content.decode(Doctor.self)) {  // get updated User from request JSON
 
                 user, newUser in
                 user.firstName = newUser.firstName
@@ -74,7 +74,7 @@ struct UserController : RouteCollection {
         return try request.transaction(on: .mysql) { connection in
             return try request
                     .content
-                    .decode(User.self)                     // TODO: Only send users id
+                    .decode(Doctor.self)                     // TODO: Only send users id
                     .flatMap(to: HTTPStatus.self) { user in
                         return try user.delete(on: connection)
                                 .transform(to: .noContent)
