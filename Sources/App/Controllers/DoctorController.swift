@@ -3,7 +3,7 @@ import Vapor
 import Fluent
 
 // Defines all routes to the User
-struct UserController : RouteCollection {
+struct DoctorController: RouteCollection {
 
     // register routes
     func boot(router: Router) throws {

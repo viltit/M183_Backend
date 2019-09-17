@@ -12,8 +12,11 @@ public func routes(_ router: Router) throws {
         return "Hello, world!"
     }
 
-    let userController = UserController()
+    let userController = DoctorController()
     try router.register(collection: userController)
+
+    let websiteController = WebsiteController()
+    try router.register(collection: websiteController)
 
 
 }
