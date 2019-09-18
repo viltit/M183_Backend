@@ -15,6 +15,9 @@ public func routes(_ router: Router) throws {
     let userController = DoctorController()
     try router.register(collection: userController)
 
+    let patientController = PatientController()
+    try router.register(collection: patientController)
+
     let websiteController = WebsiteController()
     try router.register(collection: websiteController)
 

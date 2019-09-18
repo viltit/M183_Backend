@@ -8,6 +8,7 @@ struct DoctorController: RouteCollection {
     // register routes
     func boot(router: Router) throws {
         router.get("api/users", use: getAll)
+        router.post("api/users/patients", use: getPatients)
         router.post("api/users/find", use: get)
         router.post("api/users/create", use: create)
         router.put("api/users", Doctor.parameter, use: update)
@@ -23,6 +24,24 @@ struct DoctorController: RouteCollection {
     func getAll(_ request: Request) throws -> Future<[Doctor]> {
         return try request.transaction(on: .mysql) { connection in
             return Doctor.query(on: connection).all()
+        }
+    }
+
+
+    func getPatients(_ request: Request) throws -> Future<[Patient]> {
+        return try request.transaction(on: .mysql) { connection in
+            return try request
+                    .content
+                    .decode(IDDecodable.self)
+                    .flatMap(to: [Patient].self) { idDecodable in
+                        return try Doctor.find(idDecodable.id, on: connection).flatMap() {
+                            doctor -> Future<[Patient]> in
+                            guard let doctor = doctor else {
+                                throw Abort(.noContent, reason: "No doctor with id \(idDecodable.id)")
+                            }
+                            return try doctor.patients.query(on: connection).all()
+                        }
+                    }
         }
     }
 
@@ -48,7 +67,7 @@ struct DoctorController: RouteCollection {
                     .content
                     .decode(Doctor.self)
                     .flatMap(to: Doctor.self) { user in
-                        return user.save(on: request)
+                        return user.save(on: connection)
                     }
         }
     }

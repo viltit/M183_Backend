@@ -9,7 +9,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     try services.register(FluentMySQLProvider())
     try services.register(LeafProvider())
 
-    // leaf: Pefer LeafRenderer for html generation:
+    // leaf: Prefer LeafRenderer for html generation:
     config.prefer(LeafRenderer.self, for: ViewRenderer.self)
 
     // Register routes to the router

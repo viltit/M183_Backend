@@ -14,18 +14,21 @@ final class Patient : Model {
     var firstName: String
     var lastName: String
     var email: String
-    var username: String
+
+    // add child-parent relation to the patients doctor:
+    var doctor: Parent<Patient, Doctor> {
+        return parent(\.docID)
+    }
 
     // add parent-child-realtion to PatientEntry
     var entries: Children<Patient, PatientEntry> {
         return children(\.patientID)
     }
 
-    init(firstName: String, lastName: String, email: String, username: String, docID: Doctor.ID) {
+    init(firstName: String, lastName: String, email: String, docID: Doctor.ID) {
         self.firstName = firstName
         self.lastName = lastName
         self.email = email
-        self.username = username
         self.docID = docID
     }
 }
