@@ -19,6 +19,15 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
 
     // Register middleware
     var middlewares = MiddlewareConfig()    // Create _empty_ middleware config
+
+    // Allow cross origin resource sharing for local testing
+    let corsConfiguration = CORSMiddleware.Configuration(
+            allowedOrigin: .all,
+            allowedMethods: [.GET, .POST, .PUT, .OPTIONS, .DELETE, .PATCH],
+            allowedHeaders: [.accept, .authorization, .contentType, .origin, .xRequestedWith, .userAgent, .accessControlAllowOrigin]
+    )
+    let corsMiddleware = CORSMiddleware(configuration: corsConfiguration)
+    middlewares.use(corsMiddleware)
     middlewares.use(ErrorMiddleware.self)   // Catches errors and converts to HTTP response
     services.register(middlewares)
 
