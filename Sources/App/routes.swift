@@ -12,7 +12,7 @@ public func routes(_ router: Router) throws {
         return "Hello, world!"
     }
 
-    let userController = DoctorController()
+    let userController = UserController()
     try router.register(collection: userController)
 
     let patientController = PatientController()

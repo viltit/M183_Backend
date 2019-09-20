@@ -5,6 +5,9 @@ import Vapor
 /// Called before your application initializes.
 public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
 
+    // use a different database for test cases
+    let database = (env == .testing) ? "m223_tests" : "m223"
+
     // Register providers first
     try services.register(FluentMySQLProvider())
     try services.register(LeafProvider())
@@ -19,6 +22,11 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
 
     // Register middleware
     var middlewares = MiddlewareConfig()    // Create _empty_ middleware config
+
+    // Register Fluent command line arguments -> we can delete the testing database before each test
+    var commandConfig = CommandConfig.default()
+    commandConfig.useFluentCommands()
+    services.register(commandConfig)
 
     // Allow cross origin resource sharing for local testing
     let corsConfiguration = CORSMiddleware.Configuration(
@@ -40,7 +48,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
             port: 3306,
             username: "root",
             password: "viltit",
-            database: "m223")
+            database: database)
     let mysql = try MySQLDatabase(config: mySQLConfig)
 
 
@@ -51,7 +59,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
 
     // configure migration. Note: Vapor will NOT alter the database when you change the Model.
     var migrations = MigrationConfig()
-    migrations.add(model: Doctor.self, database: .mysql)
+    migrations.add(model: User.self, database: .mysql)
     migrations.add(model: Patient.self, database: .mysql)
     migrations.add(model: PatientEntry.self, database: .mysql)
     services.register(migrations)

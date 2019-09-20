@@ -56,11 +56,11 @@ struct PatientController : RouteCollection {
         }
     }
 
-    func getDoctor(_ request: Request) throws -> Future<Doctor> {
+    func getDoctor(_ request: Request) throws -> Future<User> {
         return try request.transaction(on: .mysql) { connection in
             return try request
                     .content
-                    .decode(IDDecodable.self).flatMap(to: Doctor.self) { id in
+                    .decode(IDDecodable.self).flatMap(to: User.self) { id in
                         return Patient.find(id.id, on: connection).flatMap { patient in
                             guard let patient = patient else {
                                 throw Abort(.noContent)

@@ -10,13 +10,13 @@ final class Patient : Model {
     static let idKey: IDKey = \.id
 
     var id: Int?
-    var docID: Doctor.ID
+    var docID: User.ID
     var firstName: String
     var lastName: String
     var email: String
 
     // add child-parent relation to the patients doctor:
-    var doctor: Parent<Patient, Doctor> {
+    var doctor: Parent<Patient, User> {
         return parent(\.docID)
     }
 
@@ -25,7 +25,7 @@ final class Patient : Model {
         return children(\.patientID)
     }
 
-    init(firstName: String, lastName: String, email: String, docID: Doctor.ID) {
+    init(firstName: String, lastName: String, email: String, docID: User.ID) {
         self.firstName = firstName
         self.lastName = lastName
         self.email = email
@@ -34,6 +34,7 @@ final class Patient : Model {
 }
 
 // conform to migrations for automated table creation:
+// TODO: add static function prepare to make a foreign key constraint. See book, p. 118f
 extension Patient : Migration { }
 
 // conform to Content for encoding and decoding this Model from and to JSON
