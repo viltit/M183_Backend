@@ -32,6 +32,7 @@ final class User: Model {
     var firstName: String
     var lastName: String
     var email: String
+    var password: String
     var role: Role
 
     // add parent-child relationship between User and Patient
@@ -39,22 +40,46 @@ final class User: Model {
         return children(\.docID)
     }
 
-    init(firstName: String, lastName: String, email: String, role: Role) {
+    init(firstName: String, lastName: String, email: String, password: String, role: Role) {
         self.firstName = firstName
         self.lastName = lastName
         self.email = email
+        self.password = password
         self.role = role
+    }
+
+    // converts a User instance to its public form (ie., without password in our case)
+    func toPublic() -> User.Public {
+        return User.Public(id: id, firstName: firstName, lastName: lastName, email: email, role: role)
+    }
+
+    // The public subclass is used because we do not want to return the whole User (including the password !) to
+    // a client: The public subclass represents the public view of a User
+    final class Public : Codable, Content {
+        var id: Int?
+        var firstName: String
+        var lastName: String
+        var email: String
+        var role: Role
+
+        init(id: Int?, firstName: String, lastName: String, email: String, role: Role) {
+            self.firstName = firstName
+            self.lastName = lastName
+            self.email = email
+            self.role = role
+        }
     }
 }
 
 // conform to migrations for automated table creation:
 extension User : MySQLMigration {
-    /* We could configure the table here, but the standard configutation is enough for now
+    /* Configure the users email to be unique */
     static func prepare(on conn: MySQLConnection) -> Future<Void> {
         return MySQLDatabase.create(User.self, on: conn) { builder in
+            try addProperties(to: builder)  // add all attributes from User
+            builder.unique(on: \.email)     // add unique-constraint to User.email
         }
     }
-    */
 }
 
 // conform to Content for encoding and decoding this Model from and to JSON
@@ -62,3 +87,12 @@ extension User : Content { }
 
 // conform to Parameter to allow getting a User from POST-Parameters
 extension User : Parameter { }
+
+// helper method to reduce nesting: Allows to call .toPublic on a Future<User>
+extension Future where T: User {
+    func toPublic() -> Future<User.Public> {
+        return self.map(to: User.Public.self) { user in
+            return user.toPublic()
+        }
+    }
+}

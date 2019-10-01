@@ -1,6 +1,7 @@
 import Foundation
 import Vapor
 import Fluent
+import Crypto   // to hash and salt user passwords with BCrypt
 
 // Defines all routes to the User
 struct UserController: RouteCollection {
@@ -21,9 +22,10 @@ struct UserController: RouteCollection {
     }
 
     // CRUD-Operations
-    func getAll(_ request: Request) throws -> Future<[User]> {
+    func getAll(_ request: Request) throws -> Future<[User.Public]> {
         return try request.transaction(on: .mysql) { connection in
-            return User.query(on: connection).all()
+            // User.Public is "Codable", so we can just decode a User to a User.Public:
+            return User.query(on: connection).decode(data: User.Public.self).all()
         }
     }
 
@@ -41,37 +43,39 @@ struct UserController: RouteCollection {
         }
     }
 
-    func get(_ request: Request) throws -> Future<User> {
+    func get(_ request: Request) throws -> Future<User.Public> {
          return try request.transaction(on: .mysql) { connection in
             return try request
                     .content
                     .decode(IDDecodable.self)
-                    .flatMap(to: User.self) { idDecodable in
+                    .flatMap(to: User.Public.self) { idDecodable in
                         return try User.find(idDecodable.id, on: connection).map { user in
                             guard let user = user else {
                                 throw Abort(.noContent, reason: "No user with id \(idDecodable.id)")
                             }
-                            return user
+                            return user.toPublic()
                         }
             }
         }
     }
 
-    func create(_ request: Request) throws -> Future<User> {
+    func create(_ request: Request) throws -> Future<User.Public> {
         return try request.transaction(on: .mysql) { connection in
             return try request
                     .content
                     .decode(User.self)
-                    .flatMap(to: User.self) { user in
-                        return user.save(on: connection)
+                    .flatMap(to: User.Public.self) { user in
+                        // hash the password before storing it:
+                        user.password = try BCrypt.hash(user.password)
+                        return user.save(on: connection).toPublic()
                     }
         }
     }
 
-    func update(_ request: Request) throws -> Future<User> {
+    func update(_ request: Request) throws -> Future<User.Public> {
         return try request.transaction(on: .mysql) { connection in
             return try flatMap(
-                    to: User.self,
+                    to: User.Public.self,
                     request.parameters.next(User.self),   // get existing User from the id delivered as GET-Parameter
                     request.content.decode(User.self)) {  // get updated User from request JSON
 
@@ -80,7 +84,7 @@ struct UserController: RouteCollection {
                 user.lastName = newUser.lastName
                 user.email = newUser.email
                 user.role = newUser.role
-                return user.save(on: connection)
+                return user.save(on: connection).toPublic()
             }
         }
     }
