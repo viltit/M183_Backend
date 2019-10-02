@@ -2,14 +2,40 @@
 import Foundation
 import FluentMySQL
 import Vapor
-
+import Authentication
 
 struct PatientController : RouteCollection {
     func boot(router: Router) throws {
-        router.post("api/patient", use: create)
-        router.put("api/patient", Patient.parameter, use: update)
-        router.delete("api/patient", use: delete)
-        router.post("api/patient/doctor/", use: getDoctor)
+
+        let routes = router.grouped("api", "patient")
+
+        /* Instantiate a basic authentication middleware -> verifies passwords
+
+         This "Middleware"-Stuff seems a bit magic to me.
+         To quote from Ray Wenderlichs "Vapor"-Book:
+         "Middleware allows you to intercept requests and responses in your application. In
+         this example, basicAuthMiddleware intercepts the request and authenticates the
+         user supplied. You can chain middleware together. In the above example,
+         basicAuthMiddleware authenticates the user. Then guardAuthMiddleware ensures
+         the request contains an authenticated user. If there’s no authenticated user,
+         guardAuthMiddleware throws an error."
+        */
+        let basicAuthMiddleware = User.basicAuthMiddleware(using: BCryptDigest())
+
+        // instantiate a GuardAuthenticationMiddleware -> ensures that request contain valid authentication
+        let guardAuthMiddleware = User.guardAuthMiddleware()
+
+        // chain these two middlewares together and create protected routes:
+        let protected = routes.grouped(
+                basicAuthMiddleware,
+                guardAuthMiddleware
+        )
+
+        protected.post("api/patient", use: create)
+        protected.put("api/patient", Patient.parameter, use: update)
+        protected.delete("api/patient", use: delete)
+        protected.post("api/patient/doctor/", use: getDoctor)
+
     }
 
     // Decodable for post-request with user id

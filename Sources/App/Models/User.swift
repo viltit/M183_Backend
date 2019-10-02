@@ -1,6 +1,7 @@
 import Foundation
 import FluentMySQL
 import Vapor
+import Authentication
 
 final class User: Model {
 
@@ -87,6 +88,12 @@ extension User : Content { }
 
 // conform to Parameter to allow getting a User from POST-Parameters
 extension User : Parameter { }
+
+// conform to Authenticatibale  and tell Vapor whit keypath we use as "username"
+extension User : BasicAuthenticatable {
+    static let usernameKey: UsernameKey = \User.email
+    static let passwordKey: PasswordKey = \User.password
+}
 
 // helper method to reduce nesting: Allows to call .toPublic on a Future<User>
 extension Future where T: User {

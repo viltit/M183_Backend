@@ -13,6 +13,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     try services.register(LeafProvider())
 
     // leaf: Prefer LeafRenderer for html generation:
+    // TODO: Remove, since we do not use Lead anymore
     config.prefer(LeafRenderer.self, for: ViewRenderer.self)
 
     // Register routes to the router
@@ -37,6 +38,13 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     let corsMiddleware = CORSMiddleware(configuration: corsConfiguration)
     middlewares.use(corsMiddleware)
     middlewares.use(ErrorMiddleware.self)   // Catches errors and converts to HTTP response
+
+    // Add session middleware. Enables session for all requests
+    middlewares.use(SessionsMiddleware.self)
+
+    // Configure the KeyCache (used for Session handling) to be in memory:
+    config.prefer(MemoryKeyedCache.self, for: KeyedCache.self)
+
     services.register(middlewares)
 
     // Configure a SQLite database
