@@ -5,11 +5,8 @@ import Vapor
 import Authentication
 
 struct PatientController : RouteCollection {
-    func boot(router: Router) throws {
 
-        let routes = router.grouped("api", "patient")
-
-        /* Instantiate a basic authentication middleware -> verifies passwords
+    /* Instantiate a basic authentication middleware -> verifies passwords
 
          This "Middleware"-Stuff seems a bit magic to me.
          To quote from Ray Wenderlichs "Vapor"-Book:
@@ -19,7 +16,13 @@ struct PatientController : RouteCollection {
          basicAuthMiddleware authenticates the user. Then guardAuthMiddleware ensures
          the request contains an authenticated user. If there’s no authenticated user,
          guardAuthMiddleware throws an error."
-        */
+    */
+    func boot(router: Router) throws {
+
+        let routes = router.grouped("api", "patient")
+
+        // instantiate a basic authentication middleware which uses BCrypt to verify passwords.
+        // We can create it from a static 'User'-Method because the User-Class already conforms to "BasicAuthenticatable"
         let basicAuthMiddleware = User.basicAuthMiddleware(using: BCryptDigest())
 
         // instantiate a GuardAuthenticationMiddleware -> ensures that request contain valid authentication
@@ -31,10 +34,11 @@ struct PatientController : RouteCollection {
                 guardAuthMiddleware
         )
 
-        protected.post("api/patient", use: create)
-        protected.put("api/patient", Patient.parameter, use: update)
-        protected.delete("api/patient", use: delete)
-        protected.post("api/patient/doctor/", use: getDoctor)
+        // all routes go via the protection middleware now:
+        protected.post(use: create)
+        protected.put(Patient.parameter, use: update)
+        protected.delete(use: delete)
+        protected.post("doctor", use: getDoctor)
 
     }
 

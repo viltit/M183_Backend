@@ -6,12 +6,10 @@ import Authentication
 final class User: Model {
 
     enum Role : String, Codable, ReflectionDecodable {
-
-        // i do not get why this is needed. We have to return two distinct instances
+        // i do not get why this is needed. We have to return two distinct instances in order for this enum to be codable
         static func reflectDecoded() throws -> (User.Role, User.Role) {
             return (.doctor, .nurse)
         }
-
         case doctor = "doctor"
         case nurse = "nurse"
         case admin = "admin"

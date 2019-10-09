@@ -1,6 +1,7 @@
 import FluentMySQL
 import Leaf
 import Vapor
+import Authentication
 
 /// Called before your application initializes.
 public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
@@ -12,10 +13,6 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     try services.register(FluentMySQLProvider())
     try services.register(LeafProvider())
 
-    // leaf: Prefer LeafRenderer for html generation:
-    // TODO: Remove, since we do not use Lead anymore
-    config.prefer(LeafRenderer.self, for: ViewRenderer.self)
-
     // Register routes to the router
     let router = EngineRouter.default()
     try routes(router)
@@ -23,6 +20,9 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
 
     // Register middleware
     var middlewares = MiddlewareConfig()    // Create _empty_ middleware config
+
+    // register Authentication Middleware
+    try services.register(AuthenticationProvider())
 
     // Register Fluent command line arguments -> we can delete the testing database before each test
     var commandConfig = CommandConfig.default()
@@ -70,5 +70,6 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     migrations.add(model: User.self, database: .mysql)
     migrations.add(model: Patient.self, database: .mysql)
     migrations.add(model: PatientEntry.self, database: .mysql)
+    migrations.add(model: Token.self, database: .mysql)
     services.register(migrations)
 }

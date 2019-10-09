@@ -8,17 +8,39 @@ struct UserController: RouteCollection {
 
     // register routes
     func boot(router: Router) throws {
-        router.get("api/users", use: getAll)
-        router.get("api/users/patients", User.parameter, use: getPatients)
-        router.post("api/users/find", use: get)
-        router.post("api/users/create", use: create)
-        router.put("api/users", User.parameter, use: update)
-        router.delete("api/users", use: delete)
+
+        let routes = router.grouped("api", "users")
+
+        routes.get(use: getAll)
+        routes.get("patients", User.parameter, use: getPatients)
+        routes.post("find", use: get)
+        routes.post("create", use: create)
+        routes.put(User.parameter, use: update)
+        routes.delete(use: delete)
+
+        // register protected route for login:
+        let authMiddleware = User.basicAuthMiddleware(using: BCryptDigest())
+        let authRoute = routes.grouped(authMiddleware)
+        authRoute.post("login", use: login)
     }
 
     // Decodable for post-request with user id
     struct IDDecodable : Decodable {
         let id: Int
+    }
+
+    // Login: Creates an Authentication Token
+    func login(_ request: Request) throws -> Future<Token> {
+
+        // we get this method because User conforms to BasicAuthenticatable.
+        // We do not even need to check email and password ourselfs !!
+        // The Authentication Middleware will throw an error if the user lacks credentials
+        let user = try request.requireAuthenticated(User.self)
+        let token = try Token.generate(for: user)
+
+        // the token gets saved in the database:
+        return token.save(on: request)
+
     }
 
     // CRUD-Operations
@@ -28,7 +50,6 @@ struct UserController: RouteCollection {
             return User.query(on: connection).decode(data: User.Public.self).all()
         }
     }
-
 
     func getPatients(_ request: Request) throws -> Future<[Patient]> {
         return try request.transaction(on: .mysql) { connection in
