@@ -1,5 +1,5 @@
 import Vapor
-import App
+@testable import App
 import FluentMySQL
 
 // this extension sets up an Application for the testing environment
@@ -28,6 +28,22 @@ extension Application {
         try Application.testable(envArgs: migrateEnvironment).asyncRun().wait()
     }
 
+    // helper function to send requests to the API:
+    func sendRequest (to path: String,
+                     method: HTTPMethod,
+                     headers: HTTPHeaders = .init()
+                     ) throws -> Response {
 
 
+        let responder = try self.make(Responder.self)
+        let request = HTTPRequest(
+                method: method,
+                url: URL(string: path)!,
+                headers: headers)
+        let wrappedRequest = Request(http: request, using: self)
+
+        return try responder
+                .respond(to: wrappedRequest)
+                .wait()
+    }
 }

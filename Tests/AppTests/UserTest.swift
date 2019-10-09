@@ -1,6 +1,7 @@
 @testable import App   // @testable allows to access fileprivate methods
 import Vapor
 import FluentMySQL
+import Crypto
 import XCTest
 
 
@@ -8,7 +9,9 @@ final class UserTests: XCTestCase {
 
     // needed to run tests on ubuntu:
     static let allTests = [
-        ("testUserSaveAndLoad", testUserSaveAndLoad)
+        ("testValidLogin", testValidLogin),
+        ("testInvalidLogin", testInvalidLogin)
+        //("testUserSaveAndLoad", testUserSaveAndLoad)
     ]
 
     var app: Application!
@@ -26,14 +29,47 @@ final class UserTests: XCTestCase {
         try? app.syncShutdownGracefully()
     }
 
+    func testValidLogin() throws {
+        let validCredentials = BasicAuthorization(
+                username: "admin@admin.ch",
+                password: "I am visible"
+        )
+        var tokenHeader = HTTPHeaders()
+        tokenHeader.basicAuthorization = validCredentials
+        let response: Response = try app.sendRequest(to: "/api/users/login/", method: HTTPMethod.POST, headers: tokenHeader)
+
+        XCTAssertEqual(response.http.status, .ok)
+
+        let token = try response.content.decode(Token.self).wait()
+
+        // TODO: Save token for further tests where we need it ?
+    }
+
+    func testInvalidLogin() throws {
+        let invalidCredentials = BasicAuthorization(
+                username: "admin",
+                password: "admin"
+        )
+
+        var tokenHeader = HTTPHeaders()
+        tokenHeader.basicAuthorization = invalidCredentials
+        let response: Response = try app.sendRequest(to: "/api/users/login/", method: HTTPMethod.POST, headers: tokenHeader)
+
+        XCTAssertEqual(response.http.status, .unauthorized)
+    }
+
+    /*
     func testUserSaveAndLoad() throws {
 
         let firstName = "test"
         let lastName = "user"
         let email = "test.user@testuser.ch"
+        let password = "password"
 
-        let user = User(firstName: firstName, lastName: lastName, email: email, role: .doctor)
+        let user = User(firstName: firstName, lastName: lastName, email: email, password: password, role: .doctor)
         try user.save(on: connection).wait()
+
+
 
         // send a http-request to retrieve the user:
         let responder = try app.make(Responder.self)
@@ -53,5 +89,5 @@ final class UserTests: XCTestCase {
         XCTAssertEqual(loadedUser[0].lastName, lastName)
         XCTAssertEqual(loadedUser[0].email, email)
         XCTAssertEqual(loadedUser[0].role, .doctor)
-    }
+    } */
 }
