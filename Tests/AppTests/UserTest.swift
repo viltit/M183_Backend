@@ -10,8 +10,8 @@ final class UserTests: XCTestCase {
     // needed to run tests on ubuntu:
     static let allTests = [
         ("testValidLogin", testValidLogin),
-        ("testInvalidLogin", testInvalidLogin)
-        //("testUserSaveAndLoad", testUserSaveAndLoad)
+        ("testInvalidLogin", testInvalidLogin),
+        ("testUserSaveAndLoad", testUserSaveAndLoad)
     ]
 
     var app: Application!
@@ -58,7 +58,7 @@ final class UserTests: XCTestCase {
         XCTAssertEqual(response.http.status, .unauthorized)
     }
 
-    /*
+
     func testUserSaveAndLoad() throws {
 
         let firstName = "test"
@@ -70,24 +70,19 @@ final class UserTests: XCTestCase {
         try user.save(on: connection).wait()
 
 
-
         // send a http-request to retrieve the user:
-        let responder = try app.make(Responder.self)
-        let request = HTTPRequest(
-                method: .GET,
-                url: URL(string: "/api/users")!)
-        let wrappedRequest = Request(http: request, using: app)
-
-        let response = try responder
-                .respond(to: wrappedRequest)
-                .wait()
+        let token = try app.getToken().wait()
+        var header = HTTPHeaders()
+        header.add(name: .authorization, value: "Bearer \(token)")
+        let response = try app.sendRequest(to: "/api/users", method: .GET, headers: header)
 
         let data = try response.http.body.data!
-        let loadedUser = try JSONDecoder().decode([User].self, from: data)
+        let loadedUser = try JSONDecoder().decode([User.Public].self, from: data)
 
-        XCTAssertEqual(loadedUser[0].firstName, firstName)
-        XCTAssertEqual(loadedUser[0].lastName, lastName)
-        XCTAssertEqual(loadedUser[0].email, email)
-        XCTAssertEqual(loadedUser[0].role, .doctor)
-    } */
+        // user[0] is the admin!
+        XCTAssertEqual(loadedUser[1].firstName, firstName)
+        XCTAssertEqual(loadedUser[1].lastName, lastName)
+        XCTAssertEqual(loadedUser[1].email, email)
+        XCTAssertEqual(loadedUser[1].role, .doctor)
+    }
 }

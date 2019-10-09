@@ -46,4 +46,20 @@ extension Application {
                 .respond(to: wrappedRequest)
                 .wait()
     }
+
+    // helper function to get a User Token. Needed because all routes are protected
+    func getToken() throws -> Future<String> {
+
+        let validCredentials = BasicAuthorization(
+                username: "admin@admin.ch",
+                password: "I am visible"
+        )
+        var tokenHeader = HTTPHeaders()
+        tokenHeader.basicAuthorization = validCredentials
+        let response: Response = try self.sendRequest(to: "/api/users/login/", method: HTTPMethod.POST, headers: tokenHeader)
+
+        return try response.content.decode(Token.self).map { token in
+            return token.token
+        }
+    }
 }
