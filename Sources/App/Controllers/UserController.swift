@@ -11,17 +11,25 @@ struct UserController: RouteCollection {
 
         let routes = router.grouped("api", "users")
 
-        routes.get(use: getAll)
-        routes.get("patients", User.parameter, use: getPatients)
-        routes.post("find", use: get)
-        routes.post("create", use: create)
-        routes.put(User.parameter, use: update)
-        routes.delete(use: delete)
-
-        // register protected route for login:
+        // register password-protected route for login:
         let authMiddleware = User.basicAuthMiddleware(using: BCryptDigest())
         let authRoute = routes.grouped(authMiddleware)
         authRoute.post("login", use: login)
+
+        // register token-protected route for all other user actions:
+        let tokenAuthMiddleware = User.tokenAuthMiddleware()
+        let guardAuthMiddleware = User.guardAuthMiddleware()
+        let tokenRoute = routes.grouped(
+                tokenAuthMiddleware,
+                guardAuthMiddleware)
+
+        tokenRoute.get(use: getAll)
+        tokenRoute.get("patients", User.parameter, use: getPatients)
+        tokenRoute.post("find", use: get)
+        tokenRoute.post("create", use: create)
+        tokenRoute.put(User.parameter, use: update)
+        tokenRoute.delete(use: delete)
+
     }
 
     // Decodable for post-request with user id

@@ -16,21 +16,23 @@ struct PatientController : RouteCollection {
          basicAuthMiddleware authenticates the user. Then guardAuthMiddleware ensures
          the request contains an authenticated user. If there’s no authenticated user,
          guardAuthMiddleware throws an error."
+
     */
+
+    //TODO: Every user can update every patient -> restrict ?
     func boot(router: Router) throws {
 
         let routes = router.grouped("api", "patient")
 
-        // instantiate a basic authentication middleware which uses BCrypt to verify passwords.
-        // We can create it from a static 'User'-Method because the User-Class already conforms to "BasicAuthenticatable"
-        let basicAuthMiddleware = User.basicAuthMiddleware(using: BCryptDigest())
+        // instantiate a basic authentication middleware which verifies a User via his Token
+        let tokenAuthMiddleware = User.tokenAuthMiddleware()
 
         // instantiate a GuardAuthenticationMiddleware -> ensures that request contain valid authentication
         let guardAuthMiddleware = User.guardAuthMiddleware()
 
         // chain these two middlewares together and create protected routes:
         let protected = routes.grouped(
-                basicAuthMiddleware,
+                tokenAuthMiddleware,
                 guardAuthMiddleware
         )
 
@@ -49,26 +51,45 @@ struct PatientController : RouteCollection {
 
     func create(_ request: Request) throws -> Future<Patient> {
         return try request.transaction(on: .mysql) { connection in
+            // make sure the User is Authenticated:
+            let user = try request.requireAuthenticated(User.self)
             return try request
                     .content
-                    .decode(Patient.self)
-                    .flatMap(to: Patient.self) { patient in
+                    .decode(Patient.Public.self)
+                    .flatMap(to: Patient.self) { patientData in
+                        let patient = try Patient(
+                                firstName: patientData.firstName,
+                                lastName: patientData.lastName,
+                                email: patientData.email,
+                                docID: user.requireID()
+                        )
                         return try patient.save(on: connection)
                     }
         }
     }
 
+    /*
+    - Needs a patients id in the URL to identify the patient we want to update, ie: "api/patients/1"
+    - Needs the new patient data as JSON
+    - TODO: Add a doctor parameter? Right now, the patient is assigned to the User that updates him
+        (the secretary updates the patient -> the patient belong to the secretary)
+    */
     func update(_ request: Request) throws -> Future<Patient> {
         return try request.transaction(on: .mysql) { connection in
+
             return try flatMap(
                     to: Patient.self,
-                    request.parameters.next(Patient.self),        // get the patient from database by id
-                    request.content.decode(Patient.self)) {       // get the new patient from requests json
+                    request.parameters.next(Patient.self),               // get the patient from database by id
+                    request.content.decode(Patient.Public.self)) {       // get the new patient from requests json
+
                         patient, newPatient in
+
+                        // make sure we have an authenticated user:
+                        let user = try request.requireAuthenticated(User.self)
                         patient.firstName = newPatient.firstName
                         patient.lastName = newPatient.lastName
                         patient.email = newPatient.email
-                        patient.docID = newPatient.docID
+                        patient.docID = try user.requireID()
                         return patient.save(on: connection)
                     }
         }

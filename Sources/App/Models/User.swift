@@ -93,6 +93,11 @@ extension User : BasicAuthenticatable {
     static let passwordKey: PasswordKey = \User.password
 }
 
+// Allow authentication of a User via a Token:
+extension User : TokenAuthenticatable {
+    typealias TokenType = Token
+}
+
 // helper method to reduce nesting: Allows to call .toPublic on a Future<User>
 extension Future where T: User {
     func toPublic() -> Future<User.Public> {

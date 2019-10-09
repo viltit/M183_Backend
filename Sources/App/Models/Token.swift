@@ -40,4 +40,17 @@ extension Token : Migration {
     }
 }
 
+// conform to Authentication Token Protocol
+extension Token : Authentication.Token {
+
+    typealias UserType = User
+    static let userIDKey: UserIDKey = \Token.userID
+}
+
+// use bearer Autentication:
+extension Token : BearerAuthenticatable {
+    static let tokenKey: TokenKey = \Token.token
+}
+
+
 

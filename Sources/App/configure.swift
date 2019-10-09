@@ -47,7 +47,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
 
     services.register(middlewares)
 
-    // Configure a SQLite database
+    // Configure a MySQL database
     // MySQL Database Docker container name: "m223"
     // TODO: Do not connect as root!
     // TODO: Set password as environment variable!
@@ -71,5 +71,6 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     migrations.add(model: Patient.self, database: .mysql)
     migrations.add(model: PatientEntry.self, database: .mysql)
     migrations.add(model: Token.self, database: .mysql)
+    migrations.add(migration: AdminUser.self, database: .mysql)   // note this is not a model
     services.register(migrations)
 }

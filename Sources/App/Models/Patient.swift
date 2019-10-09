@@ -31,6 +31,20 @@ final class Patient : Model {
         self.email = email
         self.docID = docID
     }
+
+    // Public view of a Patient. We use this, for example, in the create-route, where we get the doctorID from the
+    // Users Authentication Token
+    final class Public: Content, Codable {
+        var firstName: String
+        var lastName: String
+        var email: String
+
+        init(firstName: String, lastName: String, email: String) {
+            self.firstName = firstName
+            self.lastName = lastName
+            self.email = email
+        }
+    }
 }
 
 // conform to migrations for automated table creation:
