@@ -2,6 +2,7 @@ import Foundation
 import Vapor
 import Fluent
 import Crypto   // to hash and salt user passwords with BCrypt
+import Authentication
 
 // Defines all routes to the User
 struct UserController: RouteCollection {
@@ -17,18 +18,16 @@ struct UserController: RouteCollection {
         authRoute.post("login", use: login)
 
         // register token-protected route for all other user actions:
-        let tokenAuthMiddleware = User.tokenAuthMiddleware()
-        let guardAuthMiddleware = User.guardAuthMiddleware()
-        let tokenRoute = routes.grouped(
-                tokenAuthMiddleware,
-                guardAuthMiddleware)
+        let sessionRoute = routes.grouped(User.authSessionsMiddleware())
 
-        tokenRoute.get(use: getAll)
-        tokenRoute.get("patients", User.parameter, use: getPatients)
-        tokenRoute.post("find", use: get)
-        tokenRoute.post("create", use: create)
-        tokenRoute.put(User.parameter, use: update)
-        tokenRoute.delete(use: delete)
+        let protectedRoutes = sessionRoute.grouped(SessionAuthenticationMiddleware())
+
+        protectedRoutes.get(use: getAll)
+        protectedRoutes.get("patients", User.parameter, use: getPatients)
+        protectedRoutes.post("find", use: get)
+        protectedRoutes.post("create", use: create)
+        protectedRoutes.put(User.parameter, use: update)
+        protectedRoutes.delete(use: delete)
     }
 
     // Decodable for post-request with user id
@@ -54,6 +53,7 @@ struct UserController: RouteCollection {
     func getAll(_ request: Request) throws -> Future<[User.Public]> {
         return try request.transaction(on: .mysql) { connection in
             // User.Public is "Codable", so we can just decode a User to a User.Public:
+            print("SESSION: ", try request.session()["userID"])
             return User.query(on: connection).decode(data: User.Public.self).all()
         }
     }

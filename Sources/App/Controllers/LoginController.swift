@@ -13,20 +13,26 @@ struct LoginController : RouteCollection {
         router.post("login", use: login)
     }
 
-    func login(_ request: Request) throws -> Future<HTTPStatus> {
+    func login(_ request: Request) throws -> Future<String> {
         return try request.transaction(on: .mysql) { connection in
-            return try request.content.decode(LoginPostData.self).flatMap(to: HTTPStatus.self) { data in
+            return try request.content.decode(LoginPostData.self).flatMap(to: String.self) { data in
                 return try User.authenticate(
                         username: data.email,
                         password: data.password,
                         using: BCryptDigest(),
-                        on: connection).map(to: HTTPStatus.self) { user in
+                        on: connection).map(to: String.self) { user in
 
                     guard let user = user else {
-                        return HTTPStatus.unauthorized
+                        throw Abort(.unauthorized)
                     }
+
+                    // authenticate the session
                     try request.authenticateSession(user)
-                    return HTTPStatus.ok
+                    try request.session()["id"] = "\(user.sessionID!)"
+
+                    print("SESSION: ", try request.session()["id"])
+
+                    return "Done"
                 }
             }
         }
