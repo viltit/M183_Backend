@@ -98,6 +98,11 @@ extension User : TokenAuthenticatable {
     typealias TokenType = Token
 }
 
+// Tokens are not good for the webclient - storing it in Local Storage is a security risk -
+// --> The following extensions allow authentication via Sessions
+extension User : PasswordAuthenticatable { }
+extension User : SessionAuthenticatable { }
+
 // helper method to reduce nesting: Allows to call .toPublic on a Future<User>
 extension Future where T: User {
     func toPublic() -> Future<User.Public> {

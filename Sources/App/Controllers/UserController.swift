@@ -29,7 +29,6 @@ struct UserController: RouteCollection {
         tokenRoute.post("create", use: create)
         tokenRoute.put(User.parameter, use: update)
         tokenRoute.delete(use: delete)
-
     }
 
     // Decodable for post-request with user id
