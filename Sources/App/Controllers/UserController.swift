@@ -105,7 +105,7 @@ struct UserController: RouteCollection {
             return try flatMap(
                     to: User.Public.self,
                     request.parameters.next(User.self),   // get existing User from the id delivered as GET-Parameter
-                    request.content.decode(User.self)) {  // get updated User from request JSON
+                    request.content.decode(User.Public.self)) {  // get updated User from request JSON
 
                 user, newUser in
                 user.firstName = newUser.firstName
