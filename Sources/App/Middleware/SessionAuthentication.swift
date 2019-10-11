@@ -11,8 +11,11 @@ final class SessionAuthenticationMiddleware : Middleware {
     // this function is defined by protocol Middleware and will be executed automaticly on all Requests
     // that are bound to a route using this middleware
     func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
+
+        try print("Session Auth Middleware acitvated for session id \(try request.session()["userID"])")
+
         let session = try request.session()
-        guard let _ = session["id"] else {
+        guard let id = session["userID"] else {
             throw Abort(.unauthorized)
         }
         return try next.respond(to: request)

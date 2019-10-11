@@ -53,7 +53,7 @@ struct UserController: RouteCollection {
     func getAll(_ request: Request) throws -> Future<[User.Public]> {
         return try request.transaction(on: .mysql) { connection in
             // User.Public is "Codable", so we can just decode a User to a User.Public:
-            print("SESSION: ", try request.session()["userID"])
+            // print("getAll Session id: ", try request.session()["userID"])
             return User.query(on: connection).decode(data: User.Public.self).all()
         }
     }

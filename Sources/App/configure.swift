@@ -30,10 +30,12 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     services.register(commandConfig)
 
     // Allow cross origin resource sharing for local testing
+    // IT TOOK ME HOURS TO FIGURE THIS OUT: allowedOrigin = .all WILL DISABLE COOKIES FOR REQUESTS FROM LOCALHOST
     let corsConfiguration = CORSMiddleware.Configuration(
-            allowedOrigin: .all,
+            allowedOrigin: .custom("http://localhost:3000"),
             allowedMethods: [.GET, .POST, .PUT, .OPTIONS, .DELETE, .PATCH],
-            allowedHeaders: [.accept, .authorization, .contentType, .origin, .xRequestedWith, .userAgent, .accessControlAllowOrigin]
+            allowedHeaders: [.accept, .authorization, .contentType, .origin, .xRequestedWith, .userAgent, .accessControlAllowOrigin, .cookie, .setCookie],
+            allowCredentials: true
     )
     let corsMiddleware = CORSMiddleware(configuration: corsConfiguration)
     middlewares.use(corsMiddleware)
