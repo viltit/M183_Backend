@@ -41,17 +41,16 @@ struct LoginController : RouteCollection {
         }
     }
 
-    func logout(_ request: Request) throws -> Future<String> {
+    func logout(_ request: Request) throws -> String {
 
         try print("LOGOUT with Session id: ", request.session()["userID"])
-        return try request.getUserFromSession().map { user in
-            // THIS DOES ALL NOT WORK - Session is restored "by magic" on the next request
-            try request.session()["userID"] = nil
-            // try request.unauthenticateSession(User.self)
-            // try request.destroySession()
 
-            return "logout"
-        }
+        // THIS DOES ALL NOT WORK - Session is restored "by magic" on the next request
+        // try request.session()["userID"] = nil
+        try request.unauthenticateSession(User.self)
+        try request.destroySession()
+
+        return "logout"
     }
 
     func loginStatus(_ request: Request) throws -> String {
