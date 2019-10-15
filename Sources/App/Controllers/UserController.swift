@@ -17,7 +17,7 @@ struct UserController: RouteCollection {
         let authRoute = routes.grouped(authMiddleware)
         authRoute.post("login", use: login)
 
-        // register token-protected route for all other user actions:
+        // register session-protected route for all other user actions:
         let sessionRoute = routes.grouped(User.authSessionsMiddleware())
 
         let protectedRoutes = sessionRoute.grouped(SessionAuthenticationMiddleware())
@@ -104,7 +104,7 @@ struct UserController: RouteCollection {
         return try request.transaction(on: .mysql) { connection in
             return try flatMap(
                     to: User.Public.self,
-                    request.parameters.next(User.self),   // get existing User from the id delivered as GET-Parameter
+                    request.parameters.next(User.self),   // get existing User from the id delivered .../url/id
                     request.content.decode(User.Public.self)) {  // get updated User from request JSON
 
                 user, newUser in
