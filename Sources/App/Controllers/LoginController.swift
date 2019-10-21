@@ -15,15 +15,15 @@ struct LoginController : RouteCollection {
         router.get("loginStatus", use: loginStatus)
     }
 
-    func login(_ request: Request) throws -> Future<String> {
+    func login(_ request: Request) throws -> Future<User.Public> {
         // print(request.http.headers.description)
         return try request.transaction(on: .mysql) { connection in
-            return try request.content.decode(LoginPostData.self).flatMap(to: String.self) { data in
+            return try request.content.decode(LoginPostData.self).flatMap(to: User.Public.self) { data in
                 return try User.authenticate(
                         username: data.email,
                         password: data.password,
                         using: BCryptDigest(),
-                        on: connection).map(to: String.self) { user in
+                        on: connection).map(to: User.Public.self) { user in
 
                     guard let user = user else {
                         throw Abort(.unauthorized)
@@ -35,7 +35,7 @@ struct LoginController : RouteCollection {
 
                     print("LOGIN with Session id ", try request.session()["userID"])
 
-                    return "loggedIn"
+                    return user.toPublic()
                 }
             }
         }
@@ -53,7 +53,7 @@ struct LoginController : RouteCollection {
         return "logout"
     }
 
-    func loginStatus(_ request: Request) throws -> String {
+    func loginStatus(_ request: Request) throws -> Future<User.Public> {
         if try !request.hasSession() {
             throw Abort(.unauthorized)
         }
@@ -61,6 +61,8 @@ struct LoginController : RouteCollection {
         guard let _ = session["userID"] else {
             throw Abort(.unauthorized)
         }
-        return "loggedIn"
+        return try request.getUserFromSession().map { user in
+            return user.toPublic()
+        }
     }
 }

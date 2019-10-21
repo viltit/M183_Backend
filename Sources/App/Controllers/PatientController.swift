@@ -40,6 +40,7 @@ struct PatientController : RouteCollection {
         let id: Int
     }
 
+    // needs the doctors id in the url, ie: api/patient/1
     func create(_ request: Request) throws -> Future<Patient> {
         return try request.transaction(on: .mysql) { connection in
             return try request.parameters.next(User.self).flatMap { user in

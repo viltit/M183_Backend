@@ -47,7 +47,21 @@ extension Application {
                 .wait()
     }
 
+    func login() throws -> Response {
+
+        let validCredentials = BasicAuthorization(
+                username: "admin@admin.ch",
+                password: "I am visible"
+        )
+        var header = HTTPHeaders()
+        header.basicAuthorization = validCredentials
+        let response: Response = try self.sendRequest(to: "/login", method: HTTPMethod.POST, headers: header)
+
+        return response
+    }
+
     // helper function to get a User Token. Needed because all routes are protected
+    // TODO: Not needed anymore because we use sessions now
     func getToken() throws -> Future<String> {
 
         let validCredentials = BasicAuthorization(

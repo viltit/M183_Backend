@@ -10,8 +10,8 @@ final class UserTests: XCTestCase {
     // needed to run tests on ubuntu:
     static let allTests = [
         ("testValidLogin", testValidLogin),
-        ("testInvalidLogin", testInvalidLogin),
-        ("testUserSaveAndLoad", testUserSaveAndLoad)
+       // ("testInvalidLogin", testInvalidLogin),
+       // ("testUserSaveAndLoad", testUserSaveAndLoad)
     ]
 
     var app: Application!
@@ -36,7 +36,10 @@ final class UserTests: XCTestCase {
         )
         var tokenHeader = HTTPHeaders()
         tokenHeader.basicAuthorization = validCredentials
-        let response: Response = try app.sendRequest(to: "/api/users/login/", method: HTTPMethod.POST, headers: tokenHeader)
+        tokenHeader
+        let response: Response = try app.sendRequest(to: "/login/", method: HTTPMethod.POST, headers: tokenHeader)
+
+        print(response)
 
         XCTAssertEqual(response.http.status, .ok)
 

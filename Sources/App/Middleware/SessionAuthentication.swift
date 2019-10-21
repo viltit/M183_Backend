@@ -16,7 +16,7 @@ final class SessionAuthenticationMiddleware : Middleware {
 
         let session = try request.session()
         guard let id = session["userID"] else {
-            throw Abort(.unauthorized)
+            throw Abort(.forbidden)
         }
         return try next.respond(to: request)
     }
