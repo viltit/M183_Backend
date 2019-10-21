@@ -25,9 +25,12 @@ struct UserController: RouteCollection {
         protectedRoutes.get(use: getAll)
         protectedRoutes.get("patients", User.parameter, use: getPatients)
         protectedRoutes.post("find", use: get)
-        protectedRoutes.post("create", use: create)
+        // protectedRoutes.post("create", use: create)
         protectedRoutes.put(User.parameter, use: update)
         protectedRoutes.delete(use: delete)
+
+        let adminRoute = protectedRoutes.grouped(AdminAuthentication())
+        adminRoute.post("create", use: create)
     }
 
     // Decodable for post-request with user id

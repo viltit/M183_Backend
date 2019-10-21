@@ -6,11 +6,11 @@ import Vapor
 extension Request {
     func getUserFromSession() throws -> Future<User> {
         if try !self.hasSession() {
-            throw Abort(.unauthorized)
+            throw Abort(.forbidden)
         }
         guard let userID = try self.session()["userID"], let id = Int(userID) else {
             print(try self.session()["userID"])
-            throw Abort(.unauthorized)
+            throw Abort(.forbidden)
         }
         return try self.transaction(on: .mysql) { connection in
             return User.find(id, on: connection).unwrap(or: Abort(.notFound))
