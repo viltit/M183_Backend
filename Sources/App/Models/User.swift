@@ -32,6 +32,7 @@ final class User: Model {
     var lastName: String
     var email: String
     var password: String
+    var avatar: String?
     var role: Role
 
     // add parent-child relationship between User and Patient
@@ -39,12 +40,13 @@ final class User: Model {
         return children(\.docID)
     }
 
-    init(firstName: String, lastName: String, email: String, password: String, role: Role) {
+    init(firstName: String, lastName: String, email: String, password: String, role: Role, avatar: String? = nil) {
         self.firstName = firstName
         self.lastName = lastName
         self.email = email
         self.password = password
         self.role = role
+        self.avatar = avatar
     }
 
     // converts a User instance to its public form (ie., without password in our case)
