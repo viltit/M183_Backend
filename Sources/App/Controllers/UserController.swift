@@ -4,6 +4,11 @@ import Fluent
 import Crypto   // to hash and salt user passwords with BCrypt
 import Authentication
 
+// helper struct for image uploads
+struct ImageUploadData : Content {
+    var picture: Data
+}
+
 // Defines all routes to the User
 struct UserController: RouteCollection {
 
@@ -28,6 +33,10 @@ struct UserController: RouteCollection {
         // protectedRoutes.post("create", use: create)
         protectedRoutes.put(User.parameter, use: update)
         protectedRoutes.delete(use: delete)
+
+        // avatar
+        protectedRoutes.post(User.parameter, "image", use: addImage)
+        protectedRoutes.get(User.parameter, "image", use: getImage)
 
         let adminRoute = protectedRoutes.grouped(AdminAuthentication())
         adminRoute.post("create", use: create)
@@ -130,5 +139,35 @@ struct UserController: RouteCollection {
                                 .transform(to: .noContent)
                     }
         }
+    }
+
+    func addImage(_ request: Request) throws -> Future<HTTPStatus> {
+        return try flatMap(
+                to: HTTPStatus.self,
+                request.parameters.next(User.self),
+                request.content.decode(ImageUploadData.self)) {
+
+            user, imageData in
+            let workPath = try request.make(DirectoryConfig.self).workDir
+            let name = try "\(user.requireID())-\(UUID().uuidString).jpg"
+            let path = workPath + "images/" + name
+            FileManager().createFile(
+                    atPath: path,
+                    contents: imageData.picture,
+                    attributes: nil)
+            user.avatar = name
+            return user.save(on: request).transform(to: .ok)
+        }
+    }
+
+    func getImage(_ request: Request) throws -> Future<Response> {
+        return try request.parameters.next(User.self)
+            .flatMap(to: Response.self) { user in
+                guard let filename = user.avatar else {
+                    throw Abort(.notFound)
+                }
+                let path = try request.make(DirectoryConfig.self).workDir + filename
+                return try request.streamFile(at: path)
+            }
     }
 }
