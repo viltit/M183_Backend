@@ -19,7 +19,10 @@ let package = Package(
         // Handles different types of authentication:
         .package(
                 url: "https://github.com/vapor/auth.git",
-                from: "2.0.0")
+                from: "2.0.0"),
+
+        // Vapor security headers
+        .package(url: "https://github.com/brokenhandsio/VaporSecurityHeaders.git", from: "2.0.0")
     ],
     targets: [
         .target(name: "App", dependencies: ["FluentMySQL", "Vapor", "Leaf", "Authentication"]),

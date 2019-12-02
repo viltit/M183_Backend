@@ -1,0 +1,19 @@
+{
+  "name": "projekt_backend",
+  "version": "1.0.0",
+  "description": "## Voraussetzungen - Das Projekt benötigt eine laufende MySQL-Datenbank. Diese kann beliebig konfiguriert werden. Datenbankeinstellungen werden Codeseitig in ``configure.swift`` vorgenommen. - Das Projekt benötig einen Rechner mit MacOS oder Ubuntu / Debian.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/viltit/M223.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/viltit/M223/issues"
+  },
+  "homepage": "https://github.com/viltit/M223#readme"
+}
