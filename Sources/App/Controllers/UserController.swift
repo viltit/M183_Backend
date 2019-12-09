@@ -99,15 +99,30 @@ struct UserController: RouteCollection {
         }
     }
 
-    func create(_ request: Request) throws -> Future<User.Public> {
+    // Here, a new user is registered  --> the users input needs to be validated
+    // TODO: Put this route in an own file ??
+    func create(_ request: Request) throws -> Future<Response> {
         return try request.transaction(on: .mysql) { connection in
             return try request
                     .content
-                    .decode(User.self)
-                    .flatMap(to: User.Public.self) { user in
-                        // hash the password before storing it:
-                        user.password = try BCrypt.hash(user.password)
-                        return user.save(on: connection).toPublic()
+                    .decode(UserRegisterData.self)
+                    .flatMap(to: Response.self) { userData in
+                        // validate user input. This will throw an error with a message of what went wrong if it fails
+                        try userData.validate()
+
+                        // hash the password with Bcrypt
+                        let password = try BCrypt.hash(userData.password)
+                        let user = User(
+                                firstName: userData.firstName,
+                                lastName: userData.lastName,
+                                email: userData.email,
+                                password: password,
+                                role: userData.role)
+                        // TODO: Log
+                        return user.save(on: connection).map(to: Response.self) { user in
+                            let http = HTTPResponse(status: .ok)
+                            return Response(http: http, using: request)
+                        }
                     }
         }
     }
