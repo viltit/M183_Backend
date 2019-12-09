@@ -51,13 +51,13 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
 
     // Configure a MySQL database
     // MySQL Database Docker container name: "m223"
-    // TODO: Do not connect as root!
+
     // TODO: Set password as environment variable!
     let mySQLConfig = MySQLDatabaseConfig(
             hostname: "172.17.0.2", 
             port: 3306,
-            username: "root",
-            password: "viltit",
+            username: "vaporUser",     // TODO: Migration will not work anymore  since user can not create tables !!
+            password: "apiAccess",
             database: database)
     let mysql = try MySQLDatabase(config: mySQLConfig)
 
