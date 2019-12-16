@@ -30,7 +30,9 @@ extension UserRegisterData : Validatable, Reflectable {
 
         // Add a custom validation rule: Password must contain a number or symbol
         try validations.add("password_rule") { model in
-            if !(model.password.rangeOfCharacter(from: .decimalDigits) || model.password.rangeOfCharacter(from: .symbols)) {
+            if model.password.rangeOfCharacter(from: .decimalDigits) == nil
+                && model.password.rangeOfCharacter(from: .symbols) == nil
+            {
                 throw BasicValidationError("Password must include at least one digit or one special character.")
             }
         }
