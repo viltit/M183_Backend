@@ -26,10 +26,14 @@ extension UserRegisterData : Validatable, Reflectable {
         try validations.add(\.firstName, .alphanumeric && .count(3...))
         try validations.add(\.lastName, .alphanumeric && .count(3...))
         try validations.add(\.email, .email)
-        try validations.add(\.password, .count(6...))
+        try validations.add(\.password, .count(8...))
 
-        // TODO: Add custom validation rules for password
-        // let regex =  Matches("^(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#$&*])(?=.*[0-9]).{8}$")
+        // Add a custom validation rule: Password must contain a number or symbol
+        try validations.add("password_rule") { model in
+            if !(model.password.rangeOfCharacter(from: .decimalDigits) || model.password.rangeOfCharacter(from: .symbols)) {
+                throw BasicValidationError("Password must include at least one digit or one special character.")
+            }
+        }
 
         return validations
     }

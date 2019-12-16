@@ -30,7 +30,7 @@ struct LoginController : RouteCollection {
                     }
 
                     // authenticate the session
-                    // try request.authenticateSession(user)
+                  //  try request.authenticateSession(user)
                     try request.session()["userID"] = "\(try user.requireID())"
 
                     print("LOGIN with Session id ", try request.session()["userID"])

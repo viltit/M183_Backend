@@ -42,6 +42,20 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     middlewares.use(ErrorMiddleware.self)   // Catches errors and converts to HTTP response
 
     // Add session middleware. Enables session for all requests
+    // set http only for the session cookie and and expiry date
+
+
+    let sessionsConfig = SessionsConfig(cookieName: "vapor-session") { value in
+        return HTTPCookieValue(string: value,
+                expires: Date(timeIntervalSinceNow: 60 * 60),    // 1 hour
+                maxAge: nil,
+                domain: nil,
+                path: "/",
+                isSecure: false,
+                isHTTPOnly: true,
+                sameSite: nil)
+    }
+    services.register(sessionsConfig)
     middlewares.use(SessionsMiddleware.self)
 
     // Configure the KeyCache (used for Session handling) to be in memory:
