@@ -19,6 +19,8 @@ struct LoginController : RouteCollection {
         // print(request.http.headers.description)
         return try request.transaction(on: .mysql) { connection in
             return try request.content.decode(LoginPostData.self).flatMap(to: User.Public.self) { data in
+                // print("Has session: " + String(try request.hasSession()))
+                // print(try request.session().id)
                 return try User.authenticate(
                         username: data.email,
                         password: data.password,
@@ -30,10 +32,11 @@ struct LoginController : RouteCollection {
                     }
 
                     // authenticate the session
-                  //  try request.authenticateSession(user)
+                    try request.authenticateSession(user)
                     try request.session()["userID"] = "\(try user.requireID())"
-
-                    print("LOGIN with Session id ", try request.session()["userID"])
+                    // print("Has session: " + String(try request.hasSession()))
+                    // print(try request.session().id)
+                    let logger = try request.make(Logger.self)
 
                     return user.toPublic()
                 }

@@ -25,7 +25,7 @@ let package = Package(
         .package(url: "https://github.com/brokenhandsio/VaporSecurityHeaders.git", from: "2.0.0")
     ],
     targets: [
-        .target(name: "App", dependencies: ["FluentMySQL", "Vapor", "Leaf", "Authentication"]),
+        .target(name: "App", dependencies: ["FluentMySQL", "Vapor", "Leaf", "Authentication", "VaporSecurityHeaders"]),
         .target(name: "Run", dependencies: ["App"]),
         .testTarget(name: "AppTests", dependencies: ["App"])
     ]

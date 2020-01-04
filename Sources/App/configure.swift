@@ -2,12 +2,13 @@ import FluentMySQL
 import Leaf
 import Vapor
 import Authentication
+import VaporSecurityHeaders // CSP
 
 /// Called before your application initializes.
 public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
 
     // use a different database for test cases
-    let database = (env == .testing) ? "m223_tests" : "m223"
+    let database = (env == .testing) ? "m183_tests" : "m183"
 
     // Register providers first
     try services.register(FluentMySQLProvider())
@@ -32,7 +33,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     // Allow cross origin resource sharing for local testing
     // IT TOOK ME HOURS TO FIGURE THIS OUT: allowedOrigin = .all WILL DISABLE COOKIES FOR REQUESTS FROM LOCALHOST
     let corsConfiguration = CORSMiddleware.Configuration(
-            allowedOrigin: .custom("http://localhost:3000"),
+            allowedOrigin: .custom("https://localhost:3000/"),
             allowedMethods: [.GET, .POST, .PUT, .OPTIONS, .DELETE, .PATCH],
             allowedHeaders: [.accept, .authorization, .contentType, .origin, .xRequestedWith, .userAgent, .accessControlAllowOrigin, .cookie, .setCookie],
             allowCredentials: true
@@ -43,15 +44,13 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
 
     // Add session middleware. Enables session for all requests
     // set http only for the session cookie and and expiry date
-
-
     let sessionsConfig = SessionsConfig(cookieName: "vapor-session") { value in
         return HTTPCookieValue(string: value,
                 expires: Date(timeIntervalSinceNow: 60 * 60),    // 1 hour
                 maxAge: nil,
                 domain: nil,
                 path: "/",
-                isSecure: false,
+                isSecure: true,     // TODO: browser refuses to connect on true (can not verify certificate)
                 isHTTPOnly: true,
                 sameSite: nil)
     }
@@ -60,6 +59,22 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
 
     // Configure the KeyCache (used for Session handling) to be in memory:
     config.prefer(MemoryKeyedCache.self, for: KeyedCache.self)
+
+    // Add Content Security Headers:
+    // The default factory will add the following headers:
+    // x-content-type-options: nosniff
+    // content-security-policy: default-src 'self'
+    // x-frame-options: DENY
+    // x-xss-protection: 1; mode=block
+    // we also add the strict transport security (HSTS)
+    let strictTransportSecurityConfig = StrictTransportSecurityConfiguration(
+            maxAge: 31536000,
+            includeSubdomains: true,
+            preload: true)
+    let securityHeaderFactory = SecurityHeadersFactory().with(strictTransportSecurity: strictTransportSecurityConfig)
+    services.register(securityHeaderFactory.build())
+    middlewares.use(SecurityHeaders.self)
+
 
     services.register(middlewares)
 
@@ -70,8 +85,8 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     let mySQLConfig = MySQLDatabaseConfig(
             hostname: "172.17.0.2", 
             port: 3306,
-            username: "vaporUser",     // TODO: Migration will not work anymore  since user can not create tables !!
-            password: "apiAccess",
+            username: "VaporUser",     // TODO: Migration will not work anymore  since user can not create tables !!
+            password: "VaporAPI",
             database: database)
     let mysql = try MySQLDatabase(config: mySQLConfig)
 

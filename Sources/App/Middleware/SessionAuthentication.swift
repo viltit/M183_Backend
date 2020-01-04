@@ -13,11 +13,23 @@ final class SessionAuthenticationMiddleware : Middleware {
     func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
 
         try print("Session Auth Middleware acitvated for session id \(try request.session()["userID"])")
+        try print(request.session().id)
+        try print(request.session().data)
+        try print(request.http.cookies)
 
         let session = try request.session()
         guard let id = session["userID"] else {
             throw Abort(.forbidden)
         }
-        return try next.respond(to: request)
+
+        return try request.getUserFromSession().flatMap { user in
+            try request.authenticateSession(user)
+            try print(request.session().id)
+            try print(request.session().data)
+            return try next.respond(to: request)
+
+        }
+
+
     }
 }
