@@ -19,6 +19,9 @@ struct LoginController : RouteCollection {
         // print(request.http.headers.description)
         return try request.transaction(on: .mysql) { connection in
             return try request.content.decode(LoginPostData.self).flatMap(to: User.Public.self) { data in
+
+                let logger = try request.make(Logger.self)
+
                 // print("Has session: " + String(try request.hasSession()))
                 // print(try request.session().id)
                 return try User.authenticate(
@@ -28,15 +31,15 @@ struct LoginController : RouteCollection {
                         on: connection).map(to: User.Public.self) { user in
 
                     guard let user = user else {
+                        // TODO: Email should not be visible in log
+                        logger.warning("User identified by email \(data.email) failed to log in.")
                         throw Abort(.unauthorized)
                     }
 
                     // authenticate the session
                     try request.authenticateSession(user)
                     try request.session()["userID"] = "\(try user.requireID())"
-                    // print("Has session: " + String(try request.hasSession()))
-                    // print(try request.session().id)
-                    let logger = try request.make(Logger.self)
+                    logger.info("User \(user.firstName), \(user.lastName) logged in succesful.")
 
                     return user.toPublic()
                 }

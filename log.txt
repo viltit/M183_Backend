@@ -1,0 +1,5 @@
+[36mRunning projektarbeit ...[0m
+[0;36m[ INFO ][0m Migrating 'mysql' database [0;36m(/home/titus/Documents/gibm/183/projekt_backend/.build/checkouts/fluent/Sources/Fluent/Migration/MigrationConfig.swift:69)[0m
+[0;36m[ INFO ][0m Migrations complete [0;36m(/home/titus/Documents/gibm/183/projekt_backend/.build/checkouts/fluent/Sources/Fluent/Migration/MigrationConfig.swift:73)[0m
+[0;36mRunning default command: [0m.build/debug/Run [0;33mserve[0m
+Server starting on [0;36mhttp://localhost[0m[0;36m:8080[0m

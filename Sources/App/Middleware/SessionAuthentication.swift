@@ -12,13 +12,12 @@ final class SessionAuthenticationMiddleware : Middleware {
     // that are bound to a route using this middleware
     func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
 
-        try print("Session Auth Middleware acitvated for session id \(try request.session()["userID"])")
-        try print(request.session().id)
-        try print(request.session().data)
-        try print(request.http.cookies)
+        let logger = try request.make(Logger.self)
+        logger.info("A user with session id \(try request.session().id) is trying to access protected content.")
 
         let session = try request.session()
         guard let id = session["userID"] else {
+            logger.warning("Session was invalid.")
             throw Abort(.forbidden)
         }
 

@@ -120,6 +120,8 @@ struct UserController: RouteCollection {
                                 role: userData.role)
                         // TODO: Log
                         return user.save(on: connection).map(to: Response.self) { user in
+                            let logger = try request.make(Logger.self)
+                            logger.info("A new user named \(user.firstName), \(user.lastName) was created.")
                             let http = HTTPResponse(status: .ok)
                             return Response(http: http, using: request)
                         }
@@ -133,8 +135,9 @@ struct UserController: RouteCollection {
                     to: User.Public.self,
                     request.parameters.next(User.self),   // get existing User from the id delivered .../url/id
                     request.content.decode(User.Public.self)) {  // get updated User from request JSON
-
                 user, newUser in
+
+                let logger = try request.make(Logger.self)
                 user.firstName = newUser.firstName
                 user.lastName = newUser.lastName
                 user.email = newUser.email
